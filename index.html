@@ -4,23 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>记忆桥 · Memory Bridge</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=JetBrains+Mono:wght@300;400&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg-deep: #080c14;
-  --bg-card: rgba(12, 20, 35, 0.85);
-  --bg-card-hover: rgba(18, 30, 50, 0.9);
+  --bg-deep: #060a11;
+  --bg-card: rgba(10, 18, 32, 0.8);
+  --bg-card-hover: rgba(14, 25, 45, 0.9);
   --glow-cyan: #3dfff5;
+  --glow-cyan-dim: rgba(61, 255, 245, 0.5);
   --glow-purple: #a78bfa;
   --glow-pink: #f472b6;
-  --text-primary: #e2e8f0;
+  --glow-blue: #60a5fa;
+  --text-primary: #dfe6ed;
   --text-secondary: #8899aa;
-  --text-dim: #4a5568;
-  --border: rgba(61, 255, 245, 0.08);
+  --text-dim: #3e4f60;
+  --border: rgba(61, 255, 245, 0.06);
+  --border-hover: rgba(61, 255, 245, 0.15);
   --border-active: rgba(61, 255, 245, 0.25);
 }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Noto Serif SC', serif;
@@ -30,7 +35,6 @@ body {
   overflow-x: hidden;
 }
 
-/* --- 海洋背景 --- */
 .ocean-bg {
   position: fixed;
   inset: 0;
@@ -42,40 +46,66 @@ body {
 .ocean-bg::before {
   content: '';
   position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background: 
-    radial-gradient(ellipse at 20% 50%, rgba(61, 255, 245, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(244, 114, 182, 0.02) 0%, transparent 50%);
-  animation: drift 30s ease-in-out infinite;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 85%, rgba(61, 255, 245, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 15%, rgba(167, 139, 250, 0.035) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(96, 165, 250, 0.02) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 70% 80%, rgba(244, 114, 182, 0.02) 0%, transparent 50%);
+  animation: bg-drift 40s ease-in-out infinite;
 }
 
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  25% { transform: translate(-2%, 1%) rotate(1deg); }
-  50% { transform: translate(1%, -1%) rotate(-0.5deg); }
-  75% { transform: translate(-1%, 2%) rotate(0.5deg); }
+.ocean-bg::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 10%;
+  width: 1px;
+  height: 140%;
+  background: linear-gradient(to bottom, transparent, rgba(61, 255, 245, 0.03), transparent);
+  transform: rotate(15deg);
+  animation: light-ray 20s ease-in-out infinite;
 }
 
-/* 水母粒子 */
+.light-ray-2 {
+  position: absolute;
+  top: -20%;
+  right: 25%;
+  width: 1px;
+  height: 140%;
+  background: linear-gradient(to bottom, transparent, rgba(167, 139, 250, 0.025), transparent);
+  transform: rotate(-10deg);
+  animation: light-ray 25s ease-in-out infinite reverse;
+}
+
+@keyframes bg-drift {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes light-ray {
+  0%, 100% { opacity: 0.5; transform: rotate(15deg) translateX(0); }
+  50% { opacity: 1; transform: rotate(15deg) translateX(30px); }
+}
+
 .jellyfish {
   position: absolute;
   border-radius: 50%;
   opacity: 0;
   animation: float-up linear infinite;
+  filter: blur(1px);
 }
+
+.jellyfish.large { filter: blur(0.5px); }
 
 @keyframes float-up {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.3; }
-  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+  5% { opacity: 0.7; }
+  50% { transform: translateY(50vh) translateX(30px) scale(0.8); opacity: 0.4; }
+  95% { opacity: 0.15; }
+  100% { transform: translateY(-10vh) translateX(-20px) scale(1); opacity: 0; }
 }
 
-/* --- 登录页 --- */
 .login-screen {
   position: fixed;
   inset: 0;
@@ -84,7 +114,7 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--bg-deep);
-  transition: opacity 0.6s, visibility 0.6s;
+  transition: opacity 0.8s, visibility 0.8s;
 }
 
 .login-screen.hidden {
@@ -98,117 +128,173 @@ body {
   padding: 3rem;
 }
 
-.login-box h1 {
-  font-size: 1.6rem;
-  font-weight: 300;
-  letter-spacing: 0.15em;
-  color: var(--glow-cyan);
-  margin-bottom: 0.5rem;
-  text-shadow: 0 0 30px rgba(61, 255, 245, 0.3);
+.login-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1.5rem;
+  position: relative;
 }
 
-.login-box p {
-  font-size: 0.85rem;
+.login-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow-cyan-dim), transparent 70%);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.login-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--glow-cyan);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px var(--glow-cyan), 0 0 30px rgba(61, 255, 245, 0.3);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.login-box h1 {
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 0.25em;
+  color: var(--glow-cyan);
+  margin-bottom: 0.4rem;
+  text-shadow: 0 0 40px rgba(61, 255, 245, 0.25);
+}
+
+.login-box .en-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.75rem;
   color: var(--text-dim);
+  letter-spacing: 0.2em;
   margin-bottom: 2.5rem;
-  letter-spacing: 0.1em;
 }
 
 .login-input {
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 0.8rem 1.2rem;
+  border: none;
+  border-bottom: 1px solid var(--border-hover);
+  padding: 0.8rem 1rem;
   color: var(--text-primary);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.9rem;
-  width: 260px;
+  width: 240px;
   text-align: center;
   letter-spacing: 0.3em;
   outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.4s;
 }
 
-.login-input:focus {
-  border-color: var(--border-active);
-  box-shadow: 0 0 20px rgba(61, 255, 245, 0.05);
+.login-input:focus { border-color: var(--glow-cyan); }
+.login-input::placeholder { color: var(--text-dim); letter-spacing: 0.15em; }
+
+.login-btn {
+  display: block;
+  margin: 1.5rem auto 0;
+  padding: 0.55rem 2.5rem;
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  border-radius: 2px;
+  color: var(--text-secondary);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.4s;
 }
 
-.login-input::placeholder {
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
+.login-btn:hover {
+  border-color: var(--glow-cyan);
+  color: var(--glow-cyan);
+  box-shadow: 0 0 25px rgba(61, 255, 245, 0.06);
 }
 
 .login-error {
   color: var(--glow-pink);
-  font-size: 0.8rem;
-  margin-top: 1rem;
+  font-size: 0.78rem;
+  margin-top: 1.2rem;
   opacity: 0;
   transition: opacity 0.3s;
 }
 
 .login-error.show { opacity: 1; }
 
-/* --- 主布局 --- */
 .app {
   position: relative;
   z-index: 1;
-  max-width: 800px;
+  max-width: 780px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 1.5rem 5rem;
   opacity: 0;
-  transition: opacity 0.8s ease 0.3s;
+  transition: opacity 1s ease 0.3s;
 }
 
 .app.visible { opacity: 1; }
 
-/* --- 头部 --- */
 header {
   text-align: center;
-  margin-bottom: 3rem;
-  padding-top: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding-top: 2rem;
+}
+
+.header-glow {
+  width: 80px;
+  height: 1px;
+  margin: 0 auto 1.8rem;
+  background: linear-gradient(90deg, transparent, var(--glow-cyan), transparent);
+  opacity: 0.4;
 }
 
 header h1 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 300;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.25em;
   color: var(--glow-cyan);
-  text-shadow: 0 0 40px rgba(61, 255, 245, 0.2);
-  margin-bottom: 0.3rem;
+  text-shadow: 0 0 50px rgba(61, 255, 245, 0.15);
+  margin-bottom: 0.2rem;
 }
 
-header .subtitle {
-  font-size: 0.75rem;
+header .en-subtitle {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.68rem;
   color: var(--text-dim);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
+  margin-bottom: 1.2rem;
 }
 
 .stats-bar {
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  margin-top: 1.5rem;
+  gap: 1.5rem;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  letter-spacing: 0.05em;
+  font-size: 0.68rem;
+  color: var(--text-dim);
 }
 
-.stats-bar span { opacity: 0.7; }
-.stats-bar .num { color: var(--glow-cyan); opacity: 1; }
+.stats-bar .num {
+  color: var(--glow-cyan);
+  text-shadow: 0 0 10px rgba(61, 255, 245, 0.3);
+}
 
-/* --- 工具栏 --- */
 .toolbar {
   display: flex;
-  gap: 0.8rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
 }
 
 .search-box {
   flex: 1;
-  min-width: 200px;
   position: relative;
 }
 
@@ -217,35 +303,46 @@ header .subtitle {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 0.65rem 1rem 0.65rem 2.2rem;
+  padding: 0.7rem 1rem 0.7rem 2.4rem;
   color: var(--text-primary);
   font-family: 'Noto Serif SC', serif;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   outline: none;
   transition: border-color 0.3s;
 }
 
-.search-box input:focus {
-  border-color: var(--border-active);
-}
-
+.search-box input:focus { border-color: var(--border-active); }
 .search-box input::placeholder { color: var(--text-dim); }
 
-.search-box::before {
-  content: '⌕';
+.search-icon {
   position: absolute;
-  left: 0.8rem;
+  left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-dim);
-  font-size: 0.9rem;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--text-dim);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.search-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 5px;
+  height: 1.5px;
+  background: var(--text-dim);
+  transform: rotate(45deg);
+  opacity: 0.5;
 }
 
 .btn {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 0.65rem 1.2rem;
+  padding: 0.7rem 1.2rem;
   color: var(--text-secondary);
   font-family: 'Noto Serif SC', serif;
   font-size: 0.8rem;
@@ -257,118 +354,106 @@ header .subtitle {
 .btn:hover {
   border-color: var(--border-active);
   color: var(--glow-cyan);
-  box-shadow: 0 0 15px rgba(61, 255, 245, 0.05);
 }
 
 .btn.primary {
-  border-color: rgba(61, 255, 245, 0.2);
+  border-color: rgba(61, 255, 245, 0.15);
   color: var(--glow-cyan);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn.primary:hover {
-  background: rgba(61, 255, 245, 0.05);
-  box-shadow: 0 0 25px rgba(61, 255, 245, 0.08);
-}
+.btn.primary:hover { box-shadow: 0 0 25px rgba(61, 255, 245, 0.06); }
 
-/* --- 标签筛选 --- */
 .tag-filters {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
 .tag-pill {
-  padding: 0.3rem 0.8rem;
-  border-radius: 2px;
-  font-size: 0.72rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
   cursor: pointer;
   border: 1px solid var(--border);
   color: var(--text-dim);
   background: transparent;
   font-family: 'Noto Serif SC', serif;
   transition: all 0.3s;
-  letter-spacing: 0.05em;
 }
 
-.tag-pill:hover, .tag-pill.active {
+.tag-pill:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+
+.tag-pill.active {
   border-color: var(--glow-cyan);
   color: var(--glow-cyan);
   background: rgba(61, 255, 245, 0.04);
+  box-shadow: 0 0 12px rgba(61, 255, 245, 0.06);
 }
 
-/* --- 记忆卡片 --- */
 .memories-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0.6rem;
 }
 
 .memory-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 1.2rem 1.4rem;
-  transition: all 0.3s;
-  animation: fade-in 0.4s ease;
+  transition: all 0.4s;
+  animation: card-in 0.5s ease both;
   position: relative;
+  overflow: hidden;
+}
+
+.memory-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--glow-cyan), var(--glow-purple));
+  opacity: 0;
+  transition: opacity 0.4s;
 }
 
 .memory-card:hover {
   background: var(--bg-card-hover);
-  border-color: var(--border-active);
+  border-color: var(--border-hover);
+  transform: translateX(2px);
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+.memory-card:hover::before { opacity: 0.6; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.memory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
 .memory-meta {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.6rem;
+  gap: 0.6rem;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-}
-
-.memory-id {
-  color: var(--glow-cyan);
-  opacity: 0.6;
-}
-
-.memory-time {
-  color: var(--text-dim);
-}
-
-.memory-tags {
-  display: flex;
-  gap: 0.4rem;
-  margin-left: auto;
-}
-
-.memory-tag {
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
   font-size: 0.62rem;
-  background: rgba(167, 139, 250, 0.08);
-  color: var(--glow-purple);
-  border: 1px solid rgba(167, 139, 250, 0.12);
 }
 
-.memory-content {
-  font-size: 0.9rem;
-  line-height: 1.8;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+.memory-id { color: var(--glow-cyan); opacity: 0.5; }
+.memory-time { color: var(--text-dim); }
 
 .memory-actions {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
   display: flex;
   gap: 0.3rem;
   opacity: 0;
@@ -381,114 +466,158 @@ header .subtitle {
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 2px;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   color: var(--text-dim);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   transition: all 0.2s;
 }
 
-.memory-actions button:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-secondary);
+.memory-actions button:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+.memory-actions button.delete:hover { border-color: var(--glow-pink); color: var(--glow-pink); }
+
+.memory-tags-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+  flex-wrap: wrap;
 }
 
-.memory-actions button.delete:hover {
-  border-color: var(--glow-pink);
-  color: var(--glow-pink);
+.memory-tag {
+  padding: 0.12rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.58rem;
+  font-family: 'JetBrains Mono', monospace;
 }
 
-/* --- 新建/编辑 模态框 --- */
+.memory-tag.t-关系 { background: rgba(244,114,182,0.08); color: var(--glow-pink); border: 1px solid rgba(244,114,182,0.12); }
+.memory-tag.t-重要 { background: rgba(61,255,245,0.06); color: var(--glow-cyan); border: 1px solid rgba(61,255,245,0.1); }
+.memory-tag.t-近况 { background: rgba(96,165,250,0.08); color: var(--glow-blue); border: 1px solid rgba(96,165,250,0.12); }
+.memory-tag.t-创作 { background: rgba(167,139,250,0.08); color: var(--glow-purple); border: 1px solid rgba(167,139,250,0.12); }
+.memory-tag.t-偏好 { background: rgba(251,191,36,0.08); color: #fbbf24; border: 1px solid rgba(251,191,36,0.12); }
+.memory-tag.t-default { background: rgba(100,120,140,0.08); color: var(--text-secondary); border: 1px solid rgba(100,120,140,0.12); }
+
+.memory-content {
+  font-size: 0.88rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
   z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s;
+  transition: all 0.4s;
 }
 
-.modal-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
+.modal-overlay.show { opacity: 1; visibility: visible; }
 
 .modal {
-  background: #0d1525;
+  background: #0a1220;
   border: 1px solid var(--border-active);
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 2rem;
   width: 90%;
-  max-width: 560px;
-  transform: translateY(20px);
-  transition: transform 0.3s;
-  box-shadow: 0 0 60px rgba(61, 255, 245, 0.05);
+  max-width: 520px;
+  transform: translateY(25px) scale(0.97);
+  transition: transform 0.4s;
+  box-shadow: 0 0 80px rgba(61,255,245,0.04), 0 20px 60px rgba(0,0,0,0.5);
 }
 
-.modal-overlay.show .modal {
-  transform: translateY(0);
-}
+.modal-overlay.show .modal { transform: translateY(0) scale(1); }
 
 .modal h2 {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 400;
   color: var(--glow-cyan);
   margin-bottom: 1.5rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.modal textarea {
-  width: 100%;
-  min-height: 150px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 0.9rem 1rem;
-  color: var(--text-primary);
-  font-family: 'Noto Serif SC', serif;
-  font-size: 0.88rem;
-  line-height: 1.8;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.3s;
+.modal h2::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(to bottom, var(--glow-cyan), var(--glow-purple));
+  border-radius: 2px;
 }
 
-.modal textarea:focus {
-  border-color: var(--border-active);
-}
-
-.modal .field-label {
-  font-size: 0.72rem;
+.field-label {
+  font-size: 0.7rem;
   color: var(--text-dim);
   margin-bottom: 0.4rem;
   letter-spacing: 0.08em;
 }
 
-.modal .tag-input {
+.modal textarea {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  min-height: 140px;
+  background: rgba(0,0,0,0.35);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
   color: var(--text-primary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.86rem;
+  line-height: 1.85;
+  resize: vertical;
   outline: none;
-  margin-top: 1rem;
   transition: border-color 0.3s;
 }
 
-.modal .tag-input:focus {
-  border-color: var(--border-active);
+.modal textarea:focus { border-color: var(--border-active); }
+
+.tag-input-wrapper { margin-top: 1rem; }
+
+.modal .tag-input {
+  width: 100%;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.3s;
 }
 
+.modal .tag-input:focus { border-color: var(--border-active); }
 .modal .tag-input::placeholder { color: var(--text-dim); }
+
+.tag-suggestions {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag-suggest-btn {
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.62rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: transparent;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s;
+}
+
+.tag-suggest-btn:hover { border-color: var(--glow-purple); color: var(--glow-purple); }
 
 .modal-buttons {
   display: flex;
@@ -497,30 +626,11 @@ header .subtitle {
   margin-top: 1.5rem;
 }
 
-/* --- 空状态 --- */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--text-dim);
-}
-
-.empty-state .icon {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  opacity: 0.3;
-}
-
-.empty-state p {
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-}
-
-/* --- 确认对话框 --- */
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(6px);
   z-index: 600;
   display: flex;
   align-items: center;
@@ -530,90 +640,154 @@ header .subtitle {
   transition: all 0.3s;
 }
 
-.confirm-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
+.confirm-overlay.show { opacity: 1; visibility: visible; }
 
 .confirm-box {
-  background: #0d1525;
-  border: 1px solid rgba(244, 114, 182, 0.2);
-  border-radius: 4px;
-  padding: 1.8rem 2rem;
+  background: #0a1220;
+  border: 1px solid rgba(244,114,182,0.15);
+  border-radius: 6px;
+  padding: 2rem;
   text-align: center;
-  max-width: 380px;
+  max-width: 360px;
+  box-shadow: 0 0 60px rgba(244,114,182,0.04);
 }
 
 .confirm-box p {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   margin-bottom: 1.5rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
-.confirm-box .btn.danger {
-  border-color: rgba(244, 114, 182, 0.3);
-  color: var(--glow-pink);
-}
+.btn-group { display: flex; gap: 0.6rem; justify-content: center; }
 
-.confirm-box .btn.danger:hover {
-  background: rgba(244, 114, 182, 0.08);
-}
+.btn.danger { border-color: rgba(244,114,182,0.2); color: var(--glow-pink); }
+.btn.danger:hover { background: rgba(244,114,182,0.06); border-color: rgba(244,114,182,0.4); }
 
-/* --- Toast --- */
 .toast {
   position: fixed;
   bottom: 2rem;
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: #0d1525;
+  transform: translateX(-50%) translateY(15px);
+  background: #0a1220;
   border: 1px solid var(--border-active);
-  border-radius: 3px;
-  padding: 0.7rem 1.4rem;
-  font-size: 0.8rem;
+  border-radius: 4px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.78rem;
   color: var(--glow-cyan);
   opacity: 0;
-  transition: all 0.4s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 700;
   pointer-events: none;
-  font-family: 'Noto Serif SC', serif;
+  box-shadow: 0 0 30px rgba(61,255,245,0.06);
 }
 
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--text-dim);
 }
 
-/* --- 响应式 --- */
+.empty-jellyfish {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.empty-jellyfish::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 22px;
+  border-radius: 50% 50% 30% 30%;
+  background: radial-gradient(ellipse, rgba(61,255,245,0.15), rgba(167,139,250,0.08));
+  border: 1px solid rgba(61,255,245,0.1);
+}
+
+.empty-jellyfish::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 25px;
+  border-left: 1px solid rgba(61,255,245,0.06);
+  border-right: 1px solid rgba(167,139,250,0.06);
+  animation: tentacle-sway 4s ease-in-out infinite;
+}
+
+@keyframes tentacle-sway {
+  0%, 100% { transform: translateX(-50%) skewX(0deg); }
+  50% { transform: translateX(-50%) skewX(5deg); }
+}
+
+.empty-state p { font-size: 0.82rem; letter-spacing: 0.06em; }
+
+.footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 2rem 0;
+}
+
+.footer-line {
+  width: 40px;
+  height: 1px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(90deg, transparent, var(--border-hover), transparent);
+}
+
+.footer p {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+}
+
 @media (max-width: 600px) {
-  .app { padding: 1rem 1rem 3rem; }
-  header h1 { font-size: 1.2rem; }
+  .app { padding: 1rem 1rem 4rem; }
+  header { margin-bottom: 2rem; padding-top: 1.5rem; }
+  header h1 { font-size: 1.1rem; }
   .toolbar { flex-direction: column; }
-  .memory-actions { opacity: 1; }
+  .memory-actions { opacity: 0.7; }
+  .memory-card { padding: 1rem 1.1rem; }
+  .memory-card:hover { transform: none; }
   .stats-bar { gap: 1rem; }
-  .modal { padding: 1.5rem; width: 95%; }
+  .modal { padding: 1.5rem; width: 94%; }
+  .confirm-box { width: 90%; margin: 0 1rem; }
 }
 </style>
 </head>
 <body>
 
-<div class="ocean-bg" id="oceanBg"></div>
+<div class="ocean-bg" id="oceanBg">
+  <div class="light-ray-2"></div>
+</div>
 
-<!-- 登录 -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
+    <div class="login-icon"></div>
     <h1>记 忆 桥</h1>
-    <p>MEMORY BRIDGE</p>
+    <div class="en-title">Memory Bridge</div>
     <input type="password" class="login-input" id="passwordInput" placeholder="· · ·" autofocus>
+    <button class="login-btn" onclick="doLogin()">进入</button>
     <div class="login-error" id="loginError">密码不对哦</div>
   </div>
 </div>
 
-<!-- 主应用 -->
 <div class="app" id="app">
   <header>
+    <div class="header-glow"></div>
     <h1>记 忆 桥</h1>
-    <div class="subtitle">MEMORY BRIDGE</div>
+    <div class="en-subtitle">Memory Bridge</div>
     <div class="stats-bar">
       <span>共 <span class="num" id="totalCount">0</span> 条记忆</span>
       <span><span class="num" id="tagCount">0</span> 个标签</span>
@@ -622,23 +796,31 @@ header .subtitle {
 
   <div class="toolbar">
     <div class="search-box">
+      <div class="search-icon"></div>
       <input type="text" id="searchInput" placeholder="搜索记忆...">
     </div>
-    <button class="btn primary" onclick="openModal()">+ 新记忆</button>
+    <button class="btn primary" onclick="openModal()">＋ 新记忆</button>
   </div>
 
   <div class="tag-filters" id="tagFilters"></div>
   <div class="memories-list" id="memoriesList"></div>
+
+  <div class="footer">
+    <div class="footer-line"></div>
+    <p>every window, finding its way back</p>
+  </div>
 </div>
 
-<!-- 新建/编辑 模态框 -->
 <div class="modal-overlay" id="modalOverlay" onclick="event.target===this&&closeModal()">
   <div class="modal">
     <h2 id="modalTitle">写入新记忆</h2>
     <div class="field-label">内容</div>
     <textarea id="memoryContent" placeholder="写点什么..."></textarea>
-    <div class="field-label" style="margin-top:1rem">标签（逗号分隔）</div>
-    <input type="text" class="tag-input" id="memoryTags" placeholder="关系, 重要, 近况">
+    <div class="tag-input-wrapper">
+      <div class="field-label">标签（逗号分隔）</div>
+      <input type="text" class="tag-input" id="memoryTags" placeholder="关系, 重要, 近况">
+      <div class="tag-suggestions" id="tagSuggestions"></div>
+    </div>
     <div class="modal-buttons">
       <button class="btn" onclick="closeModal()">取消</button>
       <button class="btn primary" onclick="saveMemory()">保存</button>
@@ -646,18 +828,16 @@ header .subtitle {
   </div>
 </div>
 
-<!-- 删除确认 -->
 <div class="confirm-overlay" id="confirmOverlay" onclick="event.target===this&&closeConfirm()">
   <div class="confirm-box">
     <p id="confirmText">确定要删除这条记忆吗？</p>
-    <div style="display:flex;gap:0.6rem;justify-content:center">
+    <div class="btn-group">
       <button class="btn" onclick="closeConfirm()">算了</button>
       <button class="btn danger" onclick="confirmAction()">删除</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -669,31 +849,32 @@ let editingId = null;
 let pendingDelete = null;
 let searchTimer = null;
 
-// --- 水母粒子 ---
+const defaultTags = ['关系', '重要', '近况', '创作', '偏好', '网络梗'];
+
 function createJellyfish() {
   const bg = document.getElementById('oceanBg');
-  for (let i = 0; i < 12; i++) {
-    const j = document.createElement('div');
-    j.className = 'jellyfish';
-    const size = Math.random() * 4 + 2;
-    const colors = ['rgba(61,255,245,0.4)', 'rgba(167,139,250,0.3)', 'rgba(244,114,182,0.25)'];
-    j.style.cssText = `
-      width: ${size}px; height: ${size}px;
-      left: ${Math.random() * 100}%;
-      background: ${colors[Math.floor(Math.random() * 3)]};
-      box-shadow: 0 0 ${size * 3}px ${colors[Math.floor(Math.random() * 3)]};
-      animation-duration: ${Math.random() * 20 + 15}s;
-      animation-delay: ${Math.random() * 20}s;
-    `;
-    bg.appendChild(j);
-  }
+  const configs = [
+    { count: 6, sizeRange: [2, 4], colors: ['rgba(61,255,245,0.35)', 'rgba(61,255,245,0.2)'], durRange: [20, 35], cls: '' },
+    { count: 4, sizeRange: [5, 8], colors: ['rgba(167,139,250,0.2)', 'rgba(96,165,250,0.15)'], durRange: [30, 50], cls: 'large' },
+    { count: 3, sizeRange: [1, 2], colors: ['rgba(244,114,182,0.25)'], durRange: [15, 25], cls: '' },
+  ];
+  configs.forEach(cfg => {
+    for (let i = 0; i < cfg.count; i++) {
+      const j = document.createElement('div');
+      j.className = 'jellyfish ' + cfg.cls;
+      const size = Math.random() * (cfg.sizeRange[1] - cfg.sizeRange[0]) + cfg.sizeRange[0];
+      const color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+      const dur = Math.random() * (cfg.durRange[1] - cfg.durRange[0]) + cfg.durRange[0];
+      j.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${color};box-shadow:0 0 ${size*4}px ${color};animation-duration:${dur}s;animation-delay:${Math.random()*dur}s;`;
+      bg.appendChild(j);
+    }
+  });
 }
 createJellyfish();
 
-// --- 登录 ---
-document.getElementById('passwordInput').addEventListener('keydown', async (e) => {
-  if (e.key !== 'Enter') return;
-  password = e.target.value;
+async function doLogin() {
+  const input = document.getElementById('passwordInput');
+  password = input.value;
   try {
     const res = await fetch('/api/memories', { headers: { 'X-Password': password } });
     if (res.ok) {
@@ -703,24 +884,23 @@ document.getElementById('passwordInput').addEventListener('keydown', async (e) =
       loadTags();
     } else {
       document.getElementById('loginError').classList.add('show');
-      e.target.value = '';
+      input.value = '';
       setTimeout(() => document.getElementById('loginError').classList.remove('show'), 2000);
     }
   } catch (err) {
     document.getElementById('loginError').textContent = '连接失败';
     document.getElementById('loginError').classList.add('show');
   }
+}
+
+document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doLogin();
 });
 
-// --- API ---
 async function api(path, options = {}) {
   const res = await fetch(path, {
     ...options,
-    headers: {
-      'X-Password': password,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
+    headers: { 'X-Password': password, 'Content-Type': 'application/json', ...(options.headers || {}) }
   });
   return res.json();
 }
@@ -737,51 +917,39 @@ async function loadTags() {
   document.getElementById('tagCount').textContent = allTags.length;
 }
 
-// --- 渲染 ---
 function renderMemories() {
   const list = document.getElementById('memoriesList');
   document.getElementById('totalCount').textContent = memories.length;
 
   if (memories.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="icon">◌</div>
-        <p>${activeTag ? '这个标签下还没有记忆' : '还没有记忆，写一条吧'}</p>
-      </div>`;
+    list.innerHTML = '<div class="empty-state"><div class="empty-jellyfish"></div><p>' +
+      (activeTag ? '这个标签下还没有记忆' : '深海空空的，写一条记忆吧') + '</p></div>';
     return;
   }
 
-  list.innerHTML = memories.map(m => {
-    const tags = m.tags ? m.tags.split(',').map(t => 
-      `<span class="memory-tag">${t.trim()}</span>`
-    ).join('') : '';
+  list.innerHTML = memories.map((m, i) => {
+    const tags = m.tags ? m.tags.split(',').map(t => {
+      const tag = t.trim();
+      const cls = ['关系','重要','近况','创作','偏好'].includes(tag) ? 't-' + tag : 't-default';
+      return '<span class="memory-tag ' + cls + '">' + tag + '</span>';
+    }).join('') : '';
     const time = formatTime(m.created_at);
-    
-    return `
-      <div class="memory-card" data-id="${m.id}">
-        <div class="memory-actions">
-          <button onclick="editMemory(${m.id})">编辑</button>
-          <button class="delete" onclick="deleteMemory(${m.id})">删除</button>
-        </div>
-        <div class="memory-meta">
-          <span class="memory-id">#${m.id}</span>
-          <span class="memory-time">${time}</span>
-          <div class="memory-tags">${tags}</div>
-        </div>
-        <div class="memory-content">${escapeHtml(m.content)}</div>
-      </div>`;
+    return '<div class="memory-card" style="animation-delay:' + (i * 0.06) + 's">' +
+      '<div class="memory-header">' +
+        '<div class="memory-meta"><span class="memory-id">#' + m.id + '</span><span class="memory-time">' + time + '</span></div>' +
+        '<div class="memory-actions"><button onclick="editMemory(' + m.id + ')">编辑</button><button class="delete" onclick="deleteMemory(' + m.id + ')">删除</button></div>' +
+      '</div>' +
+      (tags ? '<div class="memory-tags-row">' + tags + '</div>' : '') +
+      '<div class="memory-content">' + escapeHtml(m.content) + '</div>' +
+    '</div>';
   }).join('');
 }
 
 function renderTags() {
   const container = document.getElementById('tagFilters');
-  if (allTags.length === 0) { container.innerHTML = ''; return; }
-  
-  container.innerHTML = `
-    <button class="tag-pill ${!activeTag ? 'active' : ''}" onclick="filterTag('')">全部</button>
-    ${allTags.map(t => 
-      `<button class="tag-pill ${activeTag === t ? 'active' : ''}" onclick="filterTag('${t}')">${t}</button>`
-    ).join('')}`;
+  if (allTags.length === 0 && memories.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = '<button class="tag-pill ' + (!activeTag ? 'active' : '') + '" onclick="filterTag(\'\')">全部</button>' +
+    allTags.map(t => '<button class="tag-pill ' + (activeTag === t ? 'active' : '') + '" onclick="filterTag(\'' + t + '\')">' + t + '</button>').join('');
 }
 
 function filterTag(tag) {
@@ -790,27 +958,23 @@ function filterTag(tag) {
   renderTags();
 }
 
-// --- 搜索 ---
 document.getElementById('searchInput').addEventListener('input', (e) => {
   clearTimeout(searchTimer);
   const q = e.target.value.trim();
   searchTimer = setTimeout(async () => {
     if (!q) { loadMemories(activeTag); return; }
-    memories = await api(`/api/memories/search?q=${encodeURIComponent(q)}`);
+    memories = await api('/api/memories/search?q=' + encodeURIComponent(q));
     renderMemories();
   }, 300);
 });
 
-// --- 新建 / 编辑 ---
-function openModal(id = null) {
-  editingId = id;
-  const modal = document.getElementById('modalOverlay');
+function openModal(id) {
+  editingId = id || null;
   const title = document.getElementById('modalTitle');
   const content = document.getElementById('memoryContent');
   const tags = document.getElementById('memoryTags');
-
   if (id) {
-    const m = memories.find(m => m.id === id);
+    const m = memories.find(x => x.id === id);
     title.textContent = '编辑记忆';
     content.value = m.content;
     tags.value = m.tags || '';
@@ -819,8 +983,22 @@ function openModal(id = null) {
     content.value = '';
     tags.value = '';
   }
-  modal.classList.add('show');
-  setTimeout(() => content.focus(), 100);
+  renderTagSuggestions();
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(() => content.focus(), 150);
+}
+
+function renderTagSuggestions() {
+  const combined = [...new Set([...defaultTags, ...allTags])];
+  document.getElementById('tagSuggestions').innerHTML = combined.map(t =>
+    '<button class="tag-suggest-btn" onclick="addTag(\'' + t + '\')">' + t + '</button>'
+  ).join('');
+}
+
+function addTag(tag) {
+  const input = document.getElementById('memoryTags');
+  const current = input.value.split(',').map(t => t.trim()).filter(Boolean);
+  if (!current.includes(tag)) { current.push(tag); input.value = current.join(', '); }
 }
 
 function closeModal() {
@@ -832,18 +1010,11 @@ async function saveMemory() {
   const content = document.getElementById('memoryContent').value.trim();
   const tags = document.getElementById('memoryTags').value.trim();
   if (!content) { toast('内容不能为空'); return; }
-
   if (editingId) {
-    await api(`/api/memories/${editingId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ content, tags })
-    });
+    await api('/api/memories/' + editingId, { method: 'PUT', body: JSON.stringify({ content, tags }) });
     toast('已更新');
   } else {
-    await api('/api/memories', {
-      method: 'POST',
-      body: JSON.stringify({ content, tags })
-    });
+    await api('/api/memories', { method: 'POST', body: JSON.stringify({ content, tags }) });
     toast('已记住');
   }
   closeModal();
@@ -851,12 +1022,10 @@ async function saveMemory() {
   loadTags();
 }
 
-// --- 删除 ---
 function deleteMemory(id) {
   pendingDelete = id;
-  const m = memories.find(m => m.id === id);
-  document.getElementById('confirmText').textContent = 
-    `删除记忆 #${id}？\n「${m.content.substring(0, 40)}${m.content.length > 40 ? '...' : ''}」`;
+  const m = memories.find(x => x.id === id);
+  document.getElementById('confirmText').textContent = '删除记忆 #' + id + '？\n「' + m.content.substring(0, 35) + (m.content.length > 35 ? '...' : '') + '」';
   document.getElementById('confirmOverlay').classList.add('show');
 }
 
@@ -867,7 +1036,7 @@ function closeConfirm() {
 
 async function confirmAction() {
   if (pendingDelete) {
-    await api(`/api/memories/${pendingDelete}`, { method: 'DELETE' });
+    await api('/api/memories/' + pendingDelete, { method: 'DELETE' });
     toast('已删除');
     closeConfirm();
     loadMemories(activeTag);
@@ -877,7 +1046,6 @@ async function confirmAction() {
 
 function editMemory(id) { openModal(id); }
 
-// --- 工具函数 ---
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -893,7 +1061,7 @@ function formatTime(ts) {
   if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
   if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
   if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
-  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+  return (d.getMonth()+1) + '月' + d.getDate() + '日';
 }
 
 function toast(msg) {
@@ -903,12 +1071,8 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// --- 键盘快捷键 ---
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeModal();
-    closeConfirm();
-  }
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); }
 });
 </script>
 </body>
