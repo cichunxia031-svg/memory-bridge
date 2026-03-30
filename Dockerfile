@@ -5,12 +5,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server.py .
+COPY . .
 
 # 数据库存在持久化卷里
 ENV DB_DIR=/data
-ENV PORT=8765
+ENV PORT=8080
 
-EXPOSE 8765
+EXPOSE 8080
 
 CMD ["python", "server.py"]

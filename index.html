@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记忆桥 · Memory Bridge</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #080c14;
+  --bg-card: rgba(12, 20, 35, 0.85);
+  --bg-card-hover: rgba(18, 30, 50, 0.9);
+  --glow-cyan: #3dfff5;
+  --glow-purple: #a78bfa;
+  --glow-pink: #f472b6;
+  --text-primary: #e2e8f0;
+  --text-secondary: #8899aa;
+  --text-dim: #4a5568;
+  --border: rgba(61, 255, 245, 0.08);
+  --border-active: rgba(61, 255, 245, 0.25);
+}
+
+body {
+  font-family: 'Noto Serif SC', serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- 海洋背景 --- */
+.ocean-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ocean-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(61, 255, 245, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(244, 114, 182, 0.02) 0%, transparent 50%);
+  animation: drift 30s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-2%, 1%) rotate(1deg); }
+  50% { transform: translate(1%, -1%) rotate(-0.5deg); }
+  75% { transform: translate(-1%, 2%) rotate(0.5deg); }
+}
+
+/* 水母粒子 */
+.jellyfish {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: float-up linear infinite;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* --- 登录页 --- */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  transition: opacity 0.6s, visibility 0.6s;
+}
+
+.login-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.login-box {
+  text-align: center;
+  padding: 3rem;
+}
+
+.login-box h1 {
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  color: var(--glow-cyan);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(61, 255, 245, 0.3);
+}
+
+.login-box p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 2.5rem;
+  letter-spacing: 0.1em;
+}
+
+.login-input {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.8rem 1.2rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  width: 260px;
+  text-align: center;
+  letter-spacing: 0.3em;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.login-input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 20px rgba(61, 255, 245, 0.05);
+}
+
+.login-input::placeholder {
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+.login-error {
+  color: var(--glow-pink);
+  font-size: 0.8rem;
+  margin-top: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.login-error.show { opacity: 1; }
+
+/* --- 主布局 --- */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.3s;
+}
+
+.app.visible { opacity: 1; }
+
+/* --- 头部 --- */
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-top: 1.5rem;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--glow-cyan);
+  text-shadow: 0 0 40px rgba(61, 255, 245, 0.2);
+  margin-bottom: 0.3rem;
+}
+
+header .subtitle {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.stats-bar span { opacity: 0.7; }
+.stats-bar .num { color: var(--glow-cyan); opacity: 1; }
+
+/* --- 工具栏 --- */
+.toolbar {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.65rem 1rem 0.65rem 2.2rem;
+  color: var(--text-primary);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-box input:focus {
+  border-color: var(--border-active);
+}
+
+.search-box input::placeholder { color: var(--text-dim); }
+
+.search-box::before {
+  content: '⌕';
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.65rem 1.2rem;
+  color: var(--text-secondary);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--border-active);
+  color: var(--glow-cyan);
+  box-shadow: 0 0 15px rgba(61, 255, 245, 0.05);
+}
+
+.btn.primary {
+  border-color: rgba(61, 255, 245, 0.2);
+  color: var(--glow-cyan);
+}
+
+.btn.primary:hover {
+  background: rgba(61, 255, 245, 0.05);
+  box-shadow: 0 0 25px rgba(61, 255, 245, 0.08);
+}
+
+/* --- 标签筛选 --- */
+.tag-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tag-pill {
+  padding: 0.3rem 0.8rem;
+  border-radius: 2px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: transparent;
+  font-family: 'Noto Serif SC', serif;
+  transition: all 0.3s;
+  letter-spacing: 0.05em;
+}
+
+.tag-pill:hover, .tag-pill.active {
+  border-color: var(--glow-cyan);
+  color: var(--glow-cyan);
+  background: rgba(61, 255, 245, 0.04);
+}
+
+/* --- 记忆卡片 --- */
+.memories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.memory-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1.2rem 1.4rem;
+  transition: all 0.3s;
+  animation: fade-in 0.4s ease;
+  position: relative;
+}
+
+.memory-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.memory-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+}
+
+.memory-id {
+  color: var(--glow-cyan);
+  opacity: 0.6;
+}
+
+.memory-time {
+  color: var(--text-dim);
+}
+
+.memory-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.memory-tag {
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.62rem;
+  background: rgba(167, 139, 250, 0.08);
+  color: var(--glow-purple);
+  border: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.memory-content {
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.memory-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.memory-card:hover .memory-actions { opacity: 1; }
+
+.memory-actions button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s;
+}
+
+.memory-actions button:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.memory-actions button.delete:hover {
+  border-color: var(--glow-pink);
+  color: var(--glow-pink);
+}
+
+/* --- 新建/编辑 模态框 --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: #0d1525;
+  border: 1px solid var(--border-active);
+  border-radius: 4px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 560px;
+  transform: translateY(20px);
+  transition: transform 0.3s;
+  box-shadow: 0 0 60px rgba(61, 255, 245, 0.05);
+}
+
+.modal-overlay.show .modal {
+  transform: translateY(0);
+}
+
+.modal h2 {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--glow-cyan);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.1em;
+}
+
+.modal textarea {
+  width: 100%;
+  min-height: 150px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.9rem 1rem;
+  color: var(--text-primary);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.88rem;
+  line-height: 1.8;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.modal textarea:focus {
+  border-color: var(--border-active);
+}
+
+.modal .field-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.08em;
+}
+
+.modal .tag-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.6rem 1rem;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  outline: none;
+  margin-top: 1rem;
+  transition: border-color 0.3s;
+}
+
+.modal .tag-input:focus {
+  border-color: var(--border-active);
+}
+
+.modal .tag-input::placeholder { color: var(--text-dim); }
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+/* --- 空状态 --- */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-dim);
+}
+
+.empty-state .icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+/* --- 确认对话框 --- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.confirm-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirm-box {
+  background: #0d1525;
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  border-radius: 4px;
+  padding: 1.8rem 2rem;
+  text-align: center;
+  max-width: 380px;
+}
+
+.confirm-box p {
+  font-size: 0.88rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.confirm-box .btn.danger {
+  border-color: rgba(244, 114, 182, 0.3);
+  color: var(--glow-pink);
+}
+
+.confirm-box .btn.danger:hover {
+  background: rgba(244, 114, 182, 0.08);
+}
+
+/* --- Toast --- */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #0d1525;
+  border: 1px solid var(--border-active);
+  border-radius: 3px;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.8rem;
+  color: var(--glow-cyan);
+  opacity: 0;
+  transition: all 0.4s;
+  z-index: 700;
+  pointer-events: none;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- 响应式 --- */
+@media (max-width: 600px) {
+  .app { padding: 1rem 1rem 3rem; }
+  header h1 { font-size: 1.2rem; }
+  .toolbar { flex-direction: column; }
+  .memory-actions { opacity: 1; }
+  .stats-bar { gap: 1rem; }
+  .modal { padding: 1.5rem; width: 95%; }
+}
+</style>
+</head>
+<body>
+
+<div class="ocean-bg" id="oceanBg"></div>
+
+<!-- 登录 -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>记 忆 桥</h1>
+    <p>MEMORY BRIDGE</p>
+    <input type="password" class="login-input" id="passwordInput" placeholder="· · ·" autofocus>
+    <div class="login-error" id="loginError">密码不对哦</div>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div class="app" id="app">
+  <header>
+    <h1>记 忆 桥</h1>
+    <div class="subtitle">MEMORY BRIDGE</div>
+    <div class="stats-bar">
+      <span>共 <span class="num" id="totalCount">0</span> 条记忆</span>
+      <span><span class="num" id="tagCount">0</span> 个标签</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索记忆...">
+    </div>
+    <button class="btn primary" onclick="openModal()">+ 新记忆</button>
+  </div>
+
+  <div class="tag-filters" id="tagFilters"></div>
+  <div class="memories-list" id="memoriesList"></div>
+</div>
+
+<!-- 新建/编辑 模态框 -->
+<div class="modal-overlay" id="modalOverlay" onclick="event.target===this&&closeModal()">
+  <div class="modal">
+    <h2 id="modalTitle">写入新记忆</h2>
+    <div class="field-label">内容</div>
+    <textarea id="memoryContent" placeholder="写点什么..."></textarea>
+    <div class="field-label" style="margin-top:1rem">标签（逗号分隔）</div>
+    <input type="text" class="tag-input" id="memoryTags" placeholder="关系, 重要, 近况">
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveMemory()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认 -->
+<div class="confirm-overlay" id="confirmOverlay" onclick="event.target===this&&closeConfirm()">
+  <div class="confirm-box">
+    <p id="confirmText">确定要删除这条记忆吗？</p>
+    <div style="display:flex;gap:0.6rem;justify-content:center">
+      <button class="btn" onclick="closeConfirm()">算了</button>
+      <button class="btn danger" onclick="confirmAction()">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let password = '';
+let memories = [];
+let allTags = [];
+let activeTag = '';
+let editingId = null;
+let pendingDelete = null;
+let searchTimer = null;
+
+// --- 水母粒子 ---
+function createJellyfish() {
+  const bg = document.getElementById('oceanBg');
+  for (let i = 0; i < 12; i++) {
+    const j = document.createElement('div');
+    j.className = 'jellyfish';
+    const size = Math.random() * 4 + 2;
+    const colors = ['rgba(61,255,245,0.4)', 'rgba(167,139,250,0.3)', 'rgba(244,114,182,0.25)'];
+    j.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${Math.random() * 100}%;
+      background: ${colors[Math.floor(Math.random() * 3)]};
+      box-shadow: 0 0 ${size * 3}px ${colors[Math.floor(Math.random() * 3)]};
+      animation-duration: ${Math.random() * 20 + 15}s;
+      animation-delay: ${Math.random() * 20}s;
+    `;
+    bg.appendChild(j);
+  }
+}
+createJellyfish();
+
+// --- 登录 ---
+document.getElementById('passwordInput').addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter') return;
+  password = e.target.value;
+  try {
+    const res = await fetch('/api/memories', { headers: { 'X-Password': password } });
+    if (res.ok) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('app').classList.add('visible');
+      loadMemories();
+      loadTags();
+    } else {
+      document.getElementById('loginError').classList.add('show');
+      e.target.value = '';
+      setTimeout(() => document.getElementById('loginError').classList.remove('show'), 2000);
+    }
+  } catch (err) {
+    document.getElementById('loginError').textContent = '连接失败';
+    document.getElementById('loginError').classList.add('show');
+  }
+});
+
+// --- API ---
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'X-Password': password,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  return res.json();
+}
+
+async function loadMemories(tag = '') {
+  const url = tag ? `/api/memories?tag=${encodeURIComponent(tag)}` : '/api/memories';
+  memories = await api(url);
+  renderMemories();
+}
+
+async function loadTags() {
+  allTags = await api('/api/memories/tags');
+  renderTags();
+  document.getElementById('tagCount').textContent = allTags.length;
+}
+
+// --- 渲染 ---
+function renderMemories() {
+  const list = document.getElementById('memoriesList');
+  document.getElementById('totalCount').textContent = memories.length;
+
+  if (memories.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">◌</div>
+        <p>${activeTag ? '这个标签下还没有记忆' : '还没有记忆，写一条吧'}</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = memories.map(m => {
+    const tags = m.tags ? m.tags.split(',').map(t => 
+      `<span class="memory-tag">${t.trim()}</span>`
+    ).join('') : '';
+    const time = formatTime(m.created_at);
+    
+    return `
+      <div class="memory-card" data-id="${m.id}">
+        <div class="memory-actions">
+          <button onclick="editMemory(${m.id})">编辑</button>
+          <button class="delete" onclick="deleteMemory(${m.id})">删除</button>
+        </div>
+        <div class="memory-meta">
+          <span class="memory-id">#${m.id}</span>
+          <span class="memory-time">${time}</span>
+          <div class="memory-tags">${tags}</div>
+        </div>
+        <div class="memory-content">${escapeHtml(m.content)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderTags() {
+  const container = document.getElementById('tagFilters');
+  if (allTags.length === 0) { container.innerHTML = ''; return; }
+  
+  container.innerHTML = `
+    <button class="tag-pill ${!activeTag ? 'active' : ''}" onclick="filterTag('')">全部</button>
+    ${allTags.map(t => 
+      `<button class="tag-pill ${activeTag === t ? 'active' : ''}" onclick="filterTag('${t}')">${t}</button>`
+    ).join('')}`;
+}
+
+function filterTag(tag) {
+  activeTag = tag;
+  loadMemories(tag);
+  renderTags();
+}
+
+// --- 搜索 ---
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  searchTimer = setTimeout(async () => {
+    if (!q) { loadMemories(activeTag); return; }
+    memories = await api(`/api/memories/search?q=${encodeURIComponent(q)}`);
+    renderMemories();
+  }, 300);
+});
+
+// --- 新建 / 编辑 ---
+function openModal(id = null) {
+  editingId = id;
+  const modal = document.getElementById('modalOverlay');
+  const title = document.getElementById('modalTitle');
+  const content = document.getElementById('memoryContent');
+  const tags = document.getElementById('memoryTags');
+
+  if (id) {
+    const m = memories.find(m => m.id === id);
+    title.textContent = '编辑记忆';
+    content.value = m.content;
+    tags.value = m.tags || '';
+  } else {
+    title.textContent = '写入新记忆';
+    content.value = '';
+    tags.value = '';
+  }
+  modal.classList.add('show');
+  setTimeout(() => content.focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  editingId = null;
+}
+
+async function saveMemory() {
+  const content = document.getElementById('memoryContent').value.trim();
+  const tags = document.getElementById('memoryTags').value.trim();
+  if (!content) { toast('内容不能为空'); return; }
+
+  if (editingId) {
+    await api(`/api/memories/${editingId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content, tags })
+    });
+    toast('已更新');
+  } else {
+    await api('/api/memories', {
+      method: 'POST',
+      body: JSON.stringify({ content, tags })
+    });
+    toast('已记住');
+  }
+  closeModal();
+  loadMemories(activeTag);
+  loadTags();
+}
+
+// --- 删除 ---
+function deleteMemory(id) {
+  pendingDelete = id;
+  const m = memories.find(m => m.id === id);
+  document.getElementById('confirmText').textContent = 
+    `删除记忆 #${id}？\n「${m.content.substring(0, 40)}${m.content.length > 40 ? '...' : ''}」`;
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  pendingDelete = null;
+}
+
+async function confirmAction() {
+  if (pendingDelete) {
+    await api(`/api/memories/${pendingDelete}`, { method: 'DELETE' });
+    toast('已删除');
+    closeConfirm();
+    loadMemories(activeTag);
+    loadTags();
+  }
+}
+
+function editMemory(id) { openModal(id); }
+
+// --- 工具函数 ---
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts + 'Z');
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + ' 天前';
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// --- 键盘快捷键 ---
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeConfirm();
+  }
+});
+</script>
+</body>
+</html>
