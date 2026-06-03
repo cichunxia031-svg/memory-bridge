@@ -1,4 +1,4 @@
 fastapi
-fastmcp
+fastmcp>=2.0.0
 uvicorn[standard]
 starlette
