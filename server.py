@@ -266,7 +266,7 @@ async def index(request: Request):
 
 
 # --- 组合应用 ---
-mcp_app = mcp.http_app(path="/mcp", transport="sse")
+mcp_app = mcp.http_app(path="/mcp", transport="streamable-http")
 
 routes = [
     Route("/", index, methods=["GET"]),
