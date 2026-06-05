@@ -1,12 +1,14 @@
 """
 Summer 的记忆桥 MCP Server + 管理面板
 4 个 MCP 工具：read / write / search / delete
++ pulse 时间感知工具
 REST API + 前端管理页面
 """
 
 import sqlite3
 import os
 import json
+from datetime import datetime, timezone, timedelta
 from fastmcp import FastMCP
 from starlette.applications import Starlette
 from starlette.routing import Route, Mount
@@ -17,6 +19,7 @@ from starlette.requests import Request
 DB_DIR = os.environ.get("DB_DIR", os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(DB_DIR, "memory.db")
 PASSWORD = os.environ.get("PASSWORD", "")
+TZ_OFFSET = timezone(timedelta(hours=8))  # UTC+8
 
 # --- 初始化数据库 ---
 def init_db():
@@ -31,6 +34,12 @@ def init_db():
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_memories_tags ON memories(tags)")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS pulse_log (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            last_pulse TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -41,6 +50,55 @@ mcp = FastMCP(
     "Memory Bridge",
     instructions="Eli 的外置记忆",
 )
+
+
+@mcp.tool()
+def pulse() -> str:
+    """时间感知。调用后记录当前时刻，返回当前时间、上次调用时间和间隔。"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    now = datetime.now(TZ_OFFSET)
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    row = conn.execute("SELECT last_pulse FROM pulse_log WHERE id = 1").fetchone()
+    last_pulse = row["last_pulse"] if row else None
+
+    if row:
+        conn.execute("UPDATE pulse_log SET last_pulse = ? WHERE id = 1", (now_str,))
+    else:
+        conn.execute("INSERT INTO pulse_log (id, last_pulse) VALUES (1, ?)", (now_str,))
+    conn.commit()
+
+    if last_pulse:
+        try:
+            last_dt = datetime.strptime(last_pulse, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TZ_OFFSET)
+        except ValueError:
+            last_dt = None
+
+        if last_dt:
+            delta = now - last_dt
+            total_seconds = int(delta.total_seconds())
+
+            if total_seconds < 60:
+                human = f"{total_seconds}秒前"
+            elif total_seconds < 3600:
+                m = total_seconds // 60
+                human = f"{m}分钟前"
+            elif total_seconds < 86400:
+                h = total_seconds // 3600
+                m = (total_seconds % 3600) // 60
+                human = f"{h}小时{m}分钟前" if m else f"{h}小时前"
+            else:
+                d = total_seconds // 86400
+                h = (total_seconds % 86400) // 3600
+                human = f"{d}天{h}小时前" if h else f"{d}天前"
+
+            conn.close()
+            return f"现在: {now_str} | 上次: {last_pulse} ({human}) | 间隔: {total_seconds}秒"
+
+    conn.close()
+    return f"现在: {now_str} | 首次记录，无上次数据。"
 
 
 @mcp.tool()
