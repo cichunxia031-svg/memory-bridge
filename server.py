@@ -54,7 +54,7 @@ mcp = FastMCP(
 
 @mcp.tool()
 def pulse(note: str = "") -> str:
-    """时间感知。调用后记录当前时刻，返回当前时间、上次调用时间和间隔。"""
+    """Time pulse. Returns current time and interval since last call."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
